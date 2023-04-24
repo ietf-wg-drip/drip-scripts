@@ -28,7 +28,7 @@ def det_orchid(rra, hda, hi):
 
 	b_prefix = '0010000000000001000000000011' # RFC 9374 Section 8.2.1
 	h_prefix = '2001003'
-	suiteid = 0
+	suiteid = 5
 
 	b_ogaid = '00000101' # RFC 9374 Section 8.2.2
 	h_ogaid = suiteid
@@ -47,10 +47,11 @@ def det_orchid(rra, hda, hi):
 #	print(h_orchid_left.hex())
 	shake =  cSHAKE128.new(custom = ContextID)
 	shake.update((h_orchid_left + hi))
-	h_hash = shake.read(16).hex()
+	h_hash = shake.read(8).hex()
+#	print(h_hash)
 
 	# format orchid in binary
-	h_orchid = hex(int(b_prefix + b_hid + b_ogaid, 2))[2:]
+	h_orchid = hex(int(b_prefix + b_hid + b_ogaid, 2))[2:] + h_hash
 
 	# add in ':' for IPv6
 	orchid = ':'.join(h_orchid[i:i+4] for i in range(0, len(h_orchid), 4))
@@ -115,7 +116,7 @@ def main(argv):
 	f.write(pbpem)
 	f.close()
 	pbraw = key.public_key().export_key(format="raw")
-	print("EdDSA: ", pbraw.hex())
+	print("HI: ", pbraw.hex())
 	det = det_orchid(rra, hda, pbraw)
 
 
