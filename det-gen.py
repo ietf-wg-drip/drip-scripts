@@ -2,14 +2,14 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2023-04-21
+# 2023-04-25
 
 # developed with Fedora 35 using
 # dnf install python3-pycryptodomex
 # https://pycryptodome.readthedocs.io/en/v3.15.0/src/introduction.html
+# dnf install python3-IPy
 
-
-__version__ = '2023.04.01'
+__version__ = '2023.04.03'
 
 import sys, getopt
 from subprocess import call, DEVNULL
@@ -17,6 +17,7 @@ from subprocess import call, DEVNULL
 import hashlib
 import math
 from binascii import *
+from IPy import IP
 from Cryptodome.PublicKey import ECC
 from Cryptodome.Hash import cSHAKE128
 
@@ -57,6 +58,9 @@ def det_orchid(rra, hda, hi):
 	orchid = ':'.join(h_orchid[i:i+4] for i in range(0, len(h_orchid), 4))
 	print("DET:", h_orchid)
 	print("DET:", orchid)
+	ip = IP(orchid)
+	revip = ip.reverseName()
+	print("Reverse:", revip)
 	return orchid
 
 def main(argv):
@@ -84,11 +88,11 @@ def main(argv):
 		elif opt in ("-p", "--passwd"):
 			passwd = arg
 		elif opt == '--suiteid':
-			suiteid = arg
+			suiteid = int(arg)
 		elif opt == '--rra':
-			rra = arg
+			rra = int(arg)
 		elif opt == '--hda':
-			hda = arg
+			hda = int(arg)
 		elif opt == '--dataset':
 			if arg == 'y' or arg == 'Y':
 				createdataset = True
