@@ -58,6 +58,8 @@ def det_orchid(rra, hda, hi):
 	orchid = ':'.join(h_orchid[i:i+4] for i in range(0, len(h_orchid), 4))
 	print("DET:", h_orchid)
 	print("DET:", orchid)
+	fqdn = h_hash + '.' + f'{suiteid:02x}' + "." + f'{rra:04x}' + "." + f'{hda:04x}' + "." + h_prefix + ".det.uas."
+	print("FQDN:", fqdn) 
 	ip = IP(orchid)
 	revip = ip.reverseName()
 	print("Reverse:", revip)
@@ -66,16 +68,17 @@ def det_orchid(rra, hda, hi):
 def main(argv):
 	print("DET Gen Version: ", __version__)
 	# set some defaults
+	keyname = 'keyfile'
 	passwd = ''
 	suiteid = 5
 	rra = 16376
 	hda = 20
 
-	createdataset = False
+	createkeyname = False
 
 	# handle cmdline args
 	try:
-		opts, args = getopt.getopt(argv,"hn:p:",["passwd=","suiteid=","rra=","hda=", "dataset="])
+		opts, args = getopt.getopt(argv,"hn:p:",["keyname=","passwd=","suiteid=","rra=","hda=", "keynameexists="])
 	except getopt.GetoptError:
 		print('Error')
 		sys.ext(2)
@@ -83,8 +86,10 @@ def main(argv):
 	# parse the args
 	for opt, arg in opts:
 		if opt == '-h':
-			print('det-gen.py [-p,--passwd] <password> [--suiteid <HIT Suite ID:4> --rra <RRA:10> --hda <HDA:20> --dataset <y/n>]')
+			print('det-gen.py [-n,--keyname] <keyname> [-p,--passwd] <password> [--suiteid <HIT Suite ID:4> --rra <RRA:10> --hda <HDA:20> --keynameexists <y/n>]')
 			sys.exit()
+		elif opt in ("-n", "--keyname"):
+			keyname = arg
 		elif opt in ("-p", "--passwd"):
 			passwd = arg
 		elif opt == '--suiteid':
@@ -93,26 +98,30 @@ def main(argv):
 			rra = int(arg)
 		elif opt == '--hda':
 			hda = int(arg)
-		elif opt == '--dataset':
-			if arg == 'y' or arg == 'Y':
-				createdataset = True
+		elif opt == '--keynameexists':
+			if arg == 'n' or arg == 'N':
+				createkeyname = True
 			else:
-				createdataset = False
+				createkeyname = False
 
 	# show value we will be using
 	print("Using the following value for DET generation:")
+	print("KEY file: ", keyname)
 	print("KEY PASSWORD: ", passwd)
 	print("HHIT Suite ID: ", suiteid)
 	print("RRA: ", rra)
 	print("HDA: ", hda)
+	prkeyname = keyname + "prv.pem"
+	pbkeyname = keyname + "pub.pem"
+#	if createkeyname:
 	key = ECC.generate(curve='ed25519')
-	f = open('myprivatekey.pem','wt')
+	f = open(prkeyname,'wt')
 	f.write(key.export_key(format='PEM'))
 	f.close()
-	f = open('myprivatekey.pem','rt')
+	f = open(prkeyname,'rt')
 	prkey = ECC.import_key(f.read())
 #	print("EdDSA: ", prkey)
-	f = open('mypublickey.pem','wt')
+	f = open(pbkeyname,'wt')
 	pbkey = key.public_key()
 	pbpem = key.public_key().export_key(format="PEM")
 #	print("EdDSA: ", pbkey)
@@ -120,6 +129,11 @@ def main(argv):
 	f.write(pbpem)
 	f.close()
 	pbraw = key.public_key().export_key(format="raw")
+		
+#	else:
+#		f = open(pbkeyname,'rt')
+#		pbkey = ECC.import_key(f.read())
+
 	print("HI: ", pbraw.hex())
 	det = det_orchid(rra, hda, pbraw)
 
