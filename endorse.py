@@ -33,8 +33,10 @@
 # e.g.
 #python endorse.py --commandfile=root.dat --vnb="06/01/2023" --pkeyname=root
 #
+# for self-endorsements (--self=y on command line):
+#	use HIofC for the HI of the signer, DET0fP and private pem key of signer as well.
 
-__version__ = '2023.04.02'
+__version__ = '2023.04.03'
 
 import sys, getopt
 import time
@@ -51,6 +53,7 @@ DETofC = hex(0x2001003ffe0014050b27c442f9d62167)[2:]
 HIofC = hex(0x4a1232bc278359939e3555bf5393bc5b2abd57c7c3b269622d06c164b9795f07)[2:]
 DETofP = hex(0x2001003ffe0014054a12792a41175eb9)[2:]
 pkeyname = "parent"
+createself = False
 
 try:
 	opts, args = getopt.getopt(sys.argv[1:],"hn:p:",["commandfile=","pkeyname=","passwd=","vnb=","vna=", "self="])
@@ -117,28 +120,35 @@ for opt, arg in opts:
 
 #print(vnb)
 #print(vna)
-print(hex(DETofC)[2:])
-print(hex(HIofC)[2:])
-print(hex(DETofP)[2:])
-print(pkeyname)
+#print(hex(DETofC)[2:])
+#print(hex(HIofC)[2:])
+#print(hex(DETofP)[2:])
+#print(pkeyname)
 
 element = datetime.datetime.strptime(vnb.strip(),"%m/%d/%Y")
 tuple = element.timetuple()
 vnbtime = time.mktime(tuple)
-print(vnb, hex(int(vnbtime))[2:])
+#print(vnb, hex(int(vnbtime))[2:])
 
 element = datetime.datetime.strptime(vna.strip(),"%m/%d/%Y")
 tuple = element.timetuple()
 vnatime = time.mktime(tuple)
-print(vna, hex(int(vnatime))[2:])
+#print(vna, hex(int(vnatime))[2:])
+#print(createself)
 
-pleasesign = hex(int(vnbtime))[2:] + hex(int(vnatime))[2:] + hex(DETofC)[2:] + hex(HIofC)[2:] + hex(DETofP)[2:]
-print(pleasesign)
+if createself:
+	pleasesign = hex(int(vnbtime))[2:] + hex(int(vnatime))[2:] + hex(HIofC)[2:] + hex(DETofP)[2:]
+else:
+	pleasesign = hex(int(vnbtime))[2:] + hex(int(vnatime))[2:] + hex(DETofC)[2:] + hex(HIofC)[2:] + hex(DETofP)[2:]
+
+
+#print(pleasesign)
 
 pkfile = pkeyname + "prv.pem"
 
 f = open(pkfile,'rt')
 prkey = ECC.import_key(f.read())
+f.close()
 
 #	print("seed: ", prkey.seed)
 
@@ -148,4 +158,4 @@ mysig = sk.sign(bytes.fromhex(pleasesign)).signature
 
 endorsement = pleasesign + str(hexlify(mysig))[2:-1]
 
-print(len(endorsement) , endorsement)
+print("Endorsement(", len(endorsement), "):" , endorsement)
