@@ -134,15 +134,17 @@ element = datetime.datetime.strptime(vna.strip(),"%m/%d/%Y")
 tuple = element.timetuple()
 vnatime = time.mktime(tuple)
 #print(vna, hex(int(vnatime))[2:])
-#print(createself)
+#print(hex(DETofC)[2:].zfill(32))
+#print(hex(HIofC)[2:].zfill(64))
+#print(hex(DETofP)[2:].zfill(32))
 
 if createself:
-	pleasesign = hex(int(vnbtime))[2:] + hex(int(vnatime))[2:] + hex(HIofC)[2:] + hex(DETofP)[2:]
+	pleasesign = hex(int(vnbtime))[2:].zfill(8) + hex(int(vnatime))[2:].zfill(8) + hex(HIofC)[2:].zfill(64) + hex(DETofP)[2:].zfill(32)
 else:
-	pleasesign = hex(int(vnbtime))[2:] + hex(int(vnatime))[2:] + hex(DETofC)[2:] + hex(HIofC)[2:] + hex(DETofP)[2:]
+	pleasesign = hex(int(vnbtime))[2:].zfill(8) + hex(int(vnatime))[2:].zfill(8) + hex(DETofC)[2:].zfill(8) + hex(HIofC)[2:].zfill(64) + hex(DETofP)[2:]
 
 
-#print(pleasesign)
+print(pleasesign)
 
 pkfile = pkeyname + "prv.pem"
 
@@ -158,4 +160,4 @@ mysig = sk.sign(bytes.fromhex(pleasesign)).signature
 
 endorsement = pleasesign + str(hexlify(mysig))[2:-1]
 
-print("Endorsement(", len(endorsement), "):" , endorsement)
+print("Endorsement(", len(endorsement)/2, " bytes):" , endorsement)
