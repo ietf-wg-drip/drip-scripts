@@ -2,14 +2,14 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2023-04-25
+# 2023-04-27
 
 # developed with Fedora 35 using
 # dnf install python3-pycryptodomex
 # https://pycryptodome.readthedocs.io/en/v3.15.0/src/introduction.html
 # dnf install python3-IPy
 
-__version__ = '2023.04.03'
+__version__ = '2023.04.04'
 
 import sys, getopt
 from subprocess import call, DEVNULL
@@ -113,6 +113,7 @@ def main(argv):
 	print("HDA: ", hda)
 	prkeyname = keyname + "prv.pem"
 	pbkeyname = keyname + "pub.pem"
+	pbkeynameder = keyname + "pub.der"
 #	if createkeyname:
 	key = ECC.generate(curve='ed25519')
 	f = open(prkeyname,'wt')
@@ -128,13 +129,18 @@ def main(argv):
 #	print("EdDSA: ", pbpem)
 	f.write(pbpem)
 	f.close()
+	pbder = key.public_key().export_key(format="DER")
+	print("PK DER: ", pbder.hex())
+	f = open(pbkeynameder,'wb')
+	f.write(pbder)
+	f.close()
 	pbraw = key.public_key().export_key(format="raw")
 		
 #	else:
 #		f = open(pbkeyname,'rt')
 #		pbkey = ECC.import_key(f.read())
 
-	print("HI: ", pbraw.hex())
+	print("Raw HI: ", pbraw.hex())
 	det = det_orchid(rra, hda, pbraw)
 
 
