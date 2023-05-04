@@ -2,14 +2,14 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2023-04-27
+# 2023-05-4
 
 # developed with Fedora 35 using
 # dnf install python3-pycryptodomex
 # https://pycryptodome.readthedocs.io/en/v3.15.0/src/introduction.html
 # dnf install python3-IPy
 
-__version__ = '2023.04.04'
+__version__ = '2023.05.01'
 
 import sys, getopt
 from subprocess import call, DEVNULL
@@ -55,8 +55,10 @@ def det_orchid(rra, hda, hi):
 	h_orchid = hex(int(b_prefix + b_hid + b_ogaid, 2))[2:] + h_hash
 
 	# add in ':' for IPv6
-	orchid = ':'.join(h_orchid[i:i+4] for i in range(0, len(h_orchid), 4))
 	print("DET:", h_orchid)
+	hiprr = "10050020" + h_orchid + hi.hex().zfill(32)
+	print("HIP RR: IN  TYPE55 \# 152 (", hiprr[:52].zfill(52), "\n        ", hiprr[52:].zfill(52), ")")
+	orchid = ':'.join(h_orchid[i:i+4] for i in range(0, len(h_orchid), 4))
 	print("DET:", orchid)
 	fqdn = h_hash + '.' + f'{suiteid:02x}' + "." + f'{rra:04x}' + "." + f'{hda:04x}' + "." + h_prefix + ".det.uas."
 	print("FQDN:", fqdn) 
@@ -131,6 +133,7 @@ def main(argv):
 	f.close()
 	pbder = key.public_key().export_key(format="DER")
 	print("PK DER: ", pbder.hex())
+	print("TLSA RR: IN  TLSA 3 1 0 (", pbder.hex()[:44].zfill(44), "\n        ", pbder.hex()[44:].zfill(44), ")")
 	f = open(pbkeynameder,'wb')
 	f.write(pbder)
 	f.close()
@@ -142,6 +145,7 @@ def main(argv):
 
 	print("Raw HI: ", pbraw.hex())
 	det = det_orchid(rra, hda, pbraw)
+
 
 
 
