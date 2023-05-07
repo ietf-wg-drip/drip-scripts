@@ -2,7 +2,7 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2023-04-26
+# 2023-05-7
 
 # developed with Fedora 37 using
 # dnf install python3-pycryptodomex
@@ -36,12 +36,13 @@
 # for self-endorsements (--self=y on command line):
 #	use HIofC for the HI of the signer, DET0fP and private pem key of signer as well.
 
-__version__ = '2023.04.03'
+__version__ = '2023.05.01'
 
 import sys, getopt
 import time
 import datetime
 from binascii import *
+import base64
 from Cryptodome.PublicKey import ECC
 # there is probably a way for nacl to read the privatekey.pem file for the secret and not need this.
 from nacl.signing import SigningKey
@@ -144,7 +145,7 @@ else:
 	pleasesign = hex(int(vnbtime))[2:].zfill(8) + hex(int(vnatime))[2:].zfill(8) + hex(DETofC)[2:].zfill(8) + hex(HIofC)[2:].zfill(64) + hex(DETofP)[2:]
 
 
-print(pleasesign)
+# print(pleasesign)
 
 pkfile = pkeyname + "prv.pem"
 
@@ -156,8 +157,21 @@ f.close()
 
 sk = SigningKey(prkey.seed)
 mysig = sk.sign(bytes.fromhex(pleasesign)).signature
-#	print(len(mysig), str(hexlify(mysig))[2:-1])
+# print(len(mysig), str(hexlify(mysig))[2:-1])
 
 endorsement = pleasesign + str(hexlify(mysig))[2:-1]
-
 print("Endorsement(", len(endorsement)/2, " bytes):" , endorsement)
+
+# CERT RR is **ONLY** for Broadcast, i.e. 136 byte version, not self- 120 bytes...
+# 0c060a2b06010401b43b020606 created by prefixing the following with length 0c:
+# >>> from pyasn1.type import univ
+# >>> from pyasn1.codec.der.decoder import decode as der_decoder
+# >>> from pyasn1.codec.der.encoder import encode as der_encoder
+# >>> import binascii
+# >>> oid = univ.ObjectIdentifier('1.3.6.1.4.1.6715.2.6.6')
+# >>> s = der_encoder(oid)
+# >>> print(binascii.hexlify(s))
+# 060a2b06010401b43b02060
+
+certrr = (base64.b64encode(bytes.fromhex("0c060a2b06010401b43b020606"+endorsement))).decode('ascii')
+print("CERT RR:\n IN  CERT 254 0 0 (",certrr[:50],"\n",certrr[50:100],"\n",certrr[100:150],"\n",certrr[150:200], ")","\n")
