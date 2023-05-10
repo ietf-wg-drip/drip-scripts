@@ -2,14 +2,14 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2023-05-4
+# 2023-05-10
 
 # developed with Fedora 35 using
 # dnf install python3-pycryptodomex
 # https://pycryptodome.readthedocs.io/en/v3.15.0/src/introduction.html
 # dnf install python3-IPy
 
-__version__ = '2023.05.01'
+__version__ = '2023.05.02'
 
 import sys, getopt
 from subprocess import call, DEVNULL
@@ -17,13 +17,14 @@ from subprocess import call, DEVNULL
 import hashlib
 import math
 from binascii import *
+import base64
 from IPy import IP
 from Cryptodome.PublicKey import ECC
 from Cryptodome.Hash import cSHAKE128
 
 DATA_SET_SIZE = 1000000
 
-def det_orchid(rra, hda, hi):
+def det_orchid(keyname, rra, hda, hi):
 	# ORCHID PREFIX = 2001:30/28 = b0010 0000 0000 0001:0000 0000 0011/28
 	# HID = RRA (always 14 bits) + HDA (always 14 bits) = 10 + 20 = b00 0000 0000 1010 + b00 0000 0000 0001 0100
 
@@ -56,8 +57,11 @@ def det_orchid(rra, hda, hi):
 
 	# add in ':' for IPv6
 	print("DET:", h_orchid)
-	hiprr = "10050020" + h_orchid + hi.hex().zfill(32)
-	print("HIP RR: IN  TYPE55 \# 152 (", hiprr[:52].zfill(52), "\n        ", hiprr[52:].zfill(52), ")")
+#	print(hi.hex())
+	hiprr = base64.b64encode(hi).decode('ascii')
+	print(hiprr)
+	print("HIP RR: IN  HIP ( 5 ", h_orchid, "\n        ", hiprr, ")")
+	#, hiprr[52:].zfill(52), ")")
 	orchid = ':'.join(h_orchid[i:i+4] for i in range(0, len(h_orchid), 4))
 	print("DET:", orchid)
 	fqdn = h_hash + '.' + f'{suiteid:02x}' + "." + f'{rra:04x}' + "." + f'{hda:04x}' + "." + h_prefix + ".det.uas."
@@ -65,6 +69,13 @@ def det_orchid(rra, hda, hi):
 	ip = IP(orchid)
 	revip = ip.reverseName()
 	print("Reverse:", revip)
+	keynamedat = keyname + ".dat"
+	f = open(keynamedat,'wt')
+	f.write("DETofC=0x" + h_orchid +"\n")
+	f.write("HIofC=0x" + hi.hex() +"\n")
+	f.write('pkeyname="' + keyname + '"\n')
+	f.close()
+
 	return orchid
 
 def main(argv):
@@ -144,7 +155,8 @@ def main(argv):
 #		pbkey = ECC.import_key(f.read())
 
 	print("Raw HI: ", pbraw.hex())
-	det = det_orchid(rra, hda, pbraw)
+	det = det_orchid(keyname, rra, hda, pbraw)
+
 
 
 
