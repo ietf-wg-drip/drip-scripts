@@ -2,14 +2,14 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2023-05-10
+# 2023-05-11
 
 # developed with Fedora 35 using
 # dnf install python3-pycryptodomex
 # https://pycryptodome.readthedocs.io/en/v3.15.0/src/introduction.html
 # dnf install python3-IPy
 
-__version__ = '2023.05.02'
+__version__ = '2023.05.03'
 
 import sys, getopt
 from subprocess import call, DEVNULL
@@ -24,9 +24,9 @@ from Cryptodome.Hash import cSHAKE128
 
 DATA_SET_SIZE = 1000000
 
-def det_orchid(keyname, rra, hda, hi):
+def det_orchid(keyname, raa, hda, hi):
 	# ORCHID PREFIX = 2001:30/28 = b0010 0000 0000 0001:0000 0000 0011/28
-	# HID = RRA (always 14 bits) + HDA (always 14 bits) = 10 + 20 = b00 0000 0000 1010 + b00 0000 0000 0001 0100
+	# HID = RAA (always 14 bits) + HDA (always 14 bits) = 10 + 20 = b00 0000 0000 1010 + b00 0000 0000 0001 0100
 
 	b_prefix = '0010000000000001000000000011' # RFC 9374 Section 8.2.1
 	h_prefix = '2001003'
@@ -37,11 +37,11 @@ def det_orchid(keyname, rra, hda, hi):
 	ContextID = unhexlify("00B5A69C795DF5D5F0087F56843F2C40")
 
 
-	#format the HID from RRA and HDA
-#	print("RRA:", rra)
-#	print("RRA:", f'{rra:014b}')
+	#format the HID from raa and HDA
+#	print("raa:", raa)
+#	print("RAA:", f'{raa:014b}')
 #	print("HDA:", f'{hda:014b}')
-	b_hid = f'{rra:014b}' + f'{hda:014b}'
+	b_hid = f'{raa:014b}' + f'{hda:014b}'
 #	print("HID:", b_hid)
 
 	# perform hash with cSHAKE using input data
@@ -59,12 +59,12 @@ def det_orchid(keyname, rra, hda, hi):
 	print("DET:", h_orchid)
 #	print(hi.hex())
 	hiprr = base64.b64encode(hi).decode('ascii')
-	print(hiprr)
+#	print(hiprr)
 	print("HIP RR: IN  HIP ( 5 ", h_orchid, "\n        ", hiprr, ")")
 	#, hiprr[52:].zfill(52), ")")
 	orchid = ':'.join(h_orchid[i:i+4] for i in range(0, len(h_orchid), 4))
 	print("DET:", orchid)
-	fqdn = h_hash + '.' + f'{suiteid:02x}' + "." + f'{rra:04x}' + "." + f'{hda:04x}' + "." + h_prefix + ".det.uas."
+	fqdn = h_hash + '.' + f'{suiteid:02x}' + "." + f'{raa:04x}' + "." + f'{hda:04x}' + "." + h_prefix + ".det.uas."
 	print("FQDN:", fqdn) 
 	ip = IP(orchid)
 	revip = ip.reverseName()
@@ -84,14 +84,14 @@ def main(argv):
 	keyname = 'keyfile'
 	passwd = ''
 	suiteid = 5
-	rra = 16376
+	raa = 16376
 	hda = 20
 
 	createkeyname = False
 
 	# handle cmdline args
 	try:
-		opts, args = getopt.getopt(argv,"hn:p:",["keyname=","passwd=","suiteid=","rra=","hda=", "keynameexists="])
+		opts, args = getopt.getopt(argv,"hn:p:",["keyname=","passwd=","suiteid=","raa=","hda=", "keynameexists="])
 	except getopt.GetoptError:
 		print('Error')
 		sys.ext(2)
@@ -99,7 +99,7 @@ def main(argv):
 	# parse the args
 	for opt, arg in opts:
 		if opt == '-h':
-			print('det-gen.py [-n,--keyname] <keyname> [-p,--passwd] <password> [--suiteid <HIT Suite ID:4> --rra <RRA:10> --hda <HDA:20> --keynameexists <y/n>]')
+			print('det-gen.py [-n,--keyname] <keyname> [-p,--passwd] <password> [--suiteid <HIT Suite ID:4> --raa <RAA:10> --hda <HDA:20> --keynameexists <y/n>]')
 			sys.exit()
 		elif opt in ("-n", "--keyname"):
 			keyname = arg
@@ -107,8 +107,8 @@ def main(argv):
 			passwd = arg
 		elif opt == '--suiteid':
 			suiteid = int(arg)
-		elif opt == '--rra':
-			rra = int(arg)
+		elif opt == '--raa':
+			raa = int(arg)
 		elif opt == '--hda':
 			hda = int(arg)
 		elif opt == '--keynameexists':
@@ -122,7 +122,7 @@ def main(argv):
 	print("KEY file: ", keyname)
 	print("KEY PASSWORD: ", passwd)
 	print("HHIT Suite ID: ", suiteid)
-	print("RRA: ", rra)
+	print("RAA: ", raa)
 	print("HDA: ", hda)
 	prkeyname = keyname + "prv.pem"
 	pbkeyname = keyname + "pub.pem"
@@ -155,7 +155,7 @@ def main(argv):
 #		pbkey = ECC.import_key(f.read())
 
 	print("Raw HI: ", pbraw.hex())
-	det = det_orchid(keyname, rra, hda, pbraw)
+	det = det_orchid(keyname, raa, hda, pbraw)
 
 
 
