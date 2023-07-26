@@ -2,14 +2,14 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2023-05-11
+# 2023-07-25
 
 # developed with Fedora 35 using
 # dnf install python3-pycryptodomex
 # https://pycryptodome.readthedocs.io/en/v3.15.0/src/introduction.html
 # dnf install python3-IPy
 
-__version__ = '2023.05.03'
+__version__ = '2023.07.25'
 
 import sys, getopt
 from subprocess import call, DEVNULL
@@ -127,32 +127,36 @@ def main(argv):
 	prkeyname = keyname + "prv.pem"
 	pbkeyname = keyname + "pub.pem"
 	pbkeynameder = keyname + "pub.der"
-#	if createkeyname:
-	key = ECC.generate(curve='ed25519')
-	f = open(prkeyname,'wt')
-	f.write(key.export_key(format='PEM'))
-	f.close()
-	f = open(prkeyname,'rt')
-	prkey = ECC.import_key(f.read())
-#	print("EdDSA: ", prkey)
-	f = open(pbkeyname,'wt')
-	pbkey = key.public_key()
-	pbpem = key.public_key().export_key(format="PEM")
-#	print("EdDSA: ", pbkey)
-#	print("EdDSA: ", pbpem)
-	f.write(pbpem)
-	f.close()
-	pbder = key.public_key().export_key(format="DER")
-	print("PK DER: ", pbder.hex())
-	print("TLSA RR: IN  TLSA 3 1 0 (", pbder.hex()[:44].zfill(44), "\n        ", pbder.hex()[44:].zfill(44), ")")
-	f = open(pbkeynameder,'wb')
-	f.write(pbder)
-	f.close()
-	pbraw = key.public_key().export_key(format="raw")
-		
-#	else:
-#		f = open(pbkeyname,'rt')
-#		pbkey = ECC.import_key(f.read())
+	if createkeyname:
+		key = ECC.generate(curve='ed25519')
+		f = open(prkeyname,'wt')
+		f.write(key.export_key(format='PEM'))
+		f.close()
+		f = open(prkeyname,'rt')
+		prkey = ECC.import_key(f.read())
+#		print("EdDSA: ", prkey)
+		f = open(pbkeyname,'wt')
+		pbkey = key.public_key()
+		pbpem = key.public_key().export_key(format="PEM")
+#		print("EdDSA: ", pbkey)
+#		print("EdDSA: ", pbpem)
+		f.write(pbpem)
+		f.close()
+		pbder = key.public_key().export_key(format="DER")
+		print("PK DER: ", pbder.hex())
+		print("TLSA RR: IN  TLSA 3 1 0 (", pbder.hex()[:44].zfill(44), "\n        ", pbder.hex()[44:].zfill(44), ")")
+		f = open(pbkeynameder,'wb')
+		f.write(pbder)
+		f.close()
+		pbraw = key.public_key().export_key(format="raw")
+	else:
+		f = open(prkeyname,'rt')
+		prkey = ECC.import_key(f.read())
+		f.close()
+		pbraw = prkey.public_key().export_key(format="raw")
+		pbder = prkey.public_key().export_key(format="DER")
+		print("PK DER: ", pbder.hex())
+		print("TLSA RR: IN  TLSA 3 1 0 (", pbder.hex()[:44].zfill(44), "\n        ", pbder.hex()[44:].zfill(44), ")")
 
 	print("Raw HI: ", pbraw.hex())
 	det = det_orchid(keyname, raa, hda, pbraw)
