@@ -57,7 +57,7 @@ pkeyname = "parent"
 createself = False
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:],"hn:p:",["commandfile=","pkeyname=","passwd=","vnb=","vna=", "self="])
+	opts, args = getopt.getopt(sys.argv[1:],"hn:p:c:",["commandfile=","pkeyname=","passwd=","vnb=","vna=", "self="])
 except getopt.GetoptError:
 	print('Error')
 	sys.ext(2)
@@ -65,11 +65,11 @@ except getopt.GetoptError:
 #	parse the args
 for opt, arg in opts:
 	if opt == '-h':
-		print('endorse.py [-cf,--commandfile] <parent commandfile> ')
+		print('endorse.py [-c,--commandfile] <parent commandfile> <parent keyname> [-k --pkeyname, will be appended with prv.pem  -p,--passwd <password> --vnb <Not Before date:04/01/2023> --vna <vna <Not After date:04/01/2023> --self <y/n>]')
 		sys.exit()
-	elif opt in ("-cf", "--commandfile"):
+	elif opt in ("-c", "--commandfile"):
 		commandfile = arg
-	elif opt in ("-pn", "--pkeyname"):
+	elif opt in ("-k", "--pkeyname"):
 		pkeyname = arg
 	elif opt in ("-p", "--passwd"):
 		passwd = arg
@@ -82,7 +82,6 @@ for opt, arg in opts:
 			createself = True
 		else:
 			createself = False
-
 
 file1 = open(commandfile, 'r')
 a = True
@@ -93,31 +92,6 @@ while a:
 		a = False
 	exec("%s" % line.strip())
 file1.close()
-
-try:
-	opts, args = getopt.getopt(sys.argv[1:],"hn:p:",["commandfile=","pkeyname=","passwd=","vnb=","vna=", "self="])
-except getopt.GetoptError:
-	print('Error')
-	sys.ext(2)
-
-#	parse the args
-for opt, arg in opts:
-	if opt == '-h':
-		print('endorse.py [-pn,--pkeyname] <parent keyname> [-p,--passwd] <password> [--vnb <Not Before date:04/01/2023> --vna <vna <Not After date:04/01/2023> --self <y/n>]')
-		sys.exit()
-	elif opt in ("-pn", "--pkeyname"):
-		pkeyname = arg
-	elif opt in ("-p", "--passwd"):
-		passwd = arg
-	elif opt == '--vnb':
-		vnb = arg
-	elif opt == '--vna':
-		vna = arg
-	elif opt == '--self':
-		if arg == 'y' or arg == 'Y':
-			createself = True
-		else:
-			createself = False
 
 #print(vnb)
 #print(vna)
@@ -168,7 +142,7 @@ print("Endorsement(", len(endorsement)/2, " bytes):" , endorsement)
 # >>> from pyasn1.codec.der.decoder import decode as der_decoder
 # >>> from pyasn1.codec.der.encoder import encode as der_encoder
 # >>> import binascii
-# >>> oid = univ.ObjectIdentifier('1.3.6.1.4.1.6715.2.6.6')
+# >>> oid = univ.ObjectIdentifier('1.3.6.1.4.1.6715.2.6')
 # >>> s = der_encoder(oid)
 # >>> print(binascii.hexlify(s))
 # 060a2b06010401b43b02060

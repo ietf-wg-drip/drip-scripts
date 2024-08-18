@@ -91,7 +91,7 @@ def main(argv):
 
 	# handle cmdline args
 	try:
-		opts, args = getopt.getopt(argv,"hn:p:",["keyname=","passwd=","suiteid=","raa=","hda=", "keynameexists="])
+		opts, args = getopt.getopt(argv,"hn:p:c:",["keyname=","passwd=","suiteid=","raa=","hda=", "keynameexists="])
 	except getopt.GetoptError:
 		print('Error')
 		sys.ext(2)
