@@ -54,7 +54,7 @@ HDAonUAendorse="6449f34066306cc02001003ffec00005e52187f90d5f284ff1a756a6c5e4badd
 pkeyname = "testhda1"
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:],"hn:p:",["commandfile=","pkeyname=","passwd=","vna="])
+	opts, args = getopt.getopt(sys.argv[1:],"hn:p:c:",["commandfile=","pkeyname=","passwd=","vna="])
 except getopt.GetoptError:
 	print('Error')
 	sys.ext(2)
@@ -62,11 +62,11 @@ except getopt.GetoptError:
 #	parse the args
 for opt, arg in opts:
 	if opt == '-h':
-		print('a2x1.py [-cf,--commandfile] <parent commandfile> ')
+		print('a2x1.py [-c,--commandfile] <parent commandfile> ')
 		sys.exit()
-	elif opt in ("-cf", "--commandfile"):
+	elif opt in ("-c", "--commandfile"):
 		commandfile = arg
-	elif opt in ("-pn", "--pkeyname"):
+	elif opt in ("-k", "--pkeyname"):
 		pkeyname = arg
 	elif opt in ("-p", "--passwd"):
 		passwd = arg
@@ -83,24 +83,6 @@ while a:
 		a = False
 	exec("%s" % line.strip())
 file1.close()
-
-try:
-	opts, args = getopt.getopt(sys.argv[1:],"hn:p:",["commandfile=","pkeyname=","passwd=","vna="])
-except getopt.GetoptError:
-	print('Error')
-	sys.ext(2)
-
-#	parse the args
-for opt, arg in opts:
-	if opt == '-h':
-		print('a2x1.py [-pn,--pkeyname] <parent keyname> [-p,--passwd] <password> [--vna <Not After date:04/01/2023>]')
-		sys.exit()
-	elif opt in ("-pn", "--pkeyname"):
-		pkeyname = arg
-	elif opt in ("-p", "--passwd"):
-		passwd = arg
-	elif opt == '--vna':
-		vna = arg
 
 print(vna)
 print(MsgID)
