@@ -16,7 +16,7 @@
 
 # Optional file is a file of commands to set the various variables
 #	The file name is --commandfile=<something> on the command line
-#		defautl is ua.dat
+#		default is ua.dat
 #
 # sample content is:
 #
@@ -192,14 +192,15 @@ ua_hihex = ua_public_bytes.hex()
 
 # Create Endorsement
 
-element = datetime.datetime.strptime(vnb.strip(),"%m/%d/%Y")
-tuple = element.timetuple()
+elementb = datetime.datetime.strptime(vnb.strip(),"%m/%d/%Y")
+tuple = elementb.timetuple()
 vnbtime = time.mktime(tuple)
+#print(type(vnbtime), vnbtime)
 vnbh = hex(int(vnbtime))[2:]
 #print(vnb, len(vnbh), vnbh)
 
-element = datetime.datetime.strptime(vna.strip(),"%m/%d/%Y")
-tuple = element.timetuple()
+elementa = datetime.datetime.strptime(vna.strip(),"%m/%d/%Y")
+tuple = elementa.timetuple()
 vnatime = time.mktime(tuple)
 #print(vna, hex(int(vnatime))[2:].zfill(8))
 
@@ -213,17 +214,22 @@ signature = hda_prkey.sign(pleasesignb)
 endorsement = pleasesign + signature.hex()
 print("UA Endorsement by HDA(", len(endorsement)/2, " bytes):" , endorsement)
 
+#need to convert endorsement to bytes?
+#with open("UA1endor.ment", "wb") as f:
+#	f.write(endorsement)
+
 ua_subject_sn = ua_csr.subject.get_attributes_for_oid(NameOID.SERIAL_NUMBER)[0].value
 print("UA SN:",ua_subject_sn)
 
 # Create X.509 cert
 
-one_day = datetime.timedelta(1, 0, 0)
 builder = x509.CertificateBuilder()
 builder = builder.subject_name(x509.Name([]))
-builder = builder.not_valid_before(datetime.datetime.today() - one_day)
-builder = builder.not_valid_after(datetime.datetime.today() + (one_day * 30))
+builder = builder.not_valid_before(elementb + datetime.timedelta(minutes=1))
+builder = builder.not_valid_after(elementa + datetime.timedelta(hours=23, minutes=59))
+# If HDA does not use CRL, can use short cert.serial_number
 builder = builder.serial_number(random.randint(1000,9999))
+# If HDA does use CRL, should use large cert.serial_number
 #builder = builder.serial_number(x509.random_serial_number())
 builder = builder.public_key(ua_csr_pbkey)
 builder = builder.add_extension(
