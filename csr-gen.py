@@ -2,7 +2,7 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2024-08-28
+# 2024-09-09
 
 # developed with Fedora 38 using
 # dnf install python3-pycryptodomex
@@ -10,13 +10,14 @@
 # I don't know if the following is still needed...
 # dnf install python3-IPy
 
-__version__ = '2024.08.28'
+__version__ = '2024.09.09'
 import sys, getopt
 import ipaddress
 from binascii import *
 import base64
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 from Cryptodome.Hash import cSHAKE128
@@ -74,7 +75,7 @@ hda = 0  # e.g. 20
 det = "none"
 serialnumber = "none"
 ccaid = "none"
-createkeyname = False
+createkeyname = True
 
 # handle cmdline args
 try:
@@ -101,8 +102,10 @@ for opt, arg in opts:
 	elif opt == '--keynameexists':
 		if arg == 'n' or arg == 'N':
 			createkeyname = True
+			print("No")
 		else:
 			createkeyname = False
+			print("yes")
 
 if serialnumber == "none":
 	print("Error - No Serial Number")
@@ -110,21 +113,33 @@ if serialnumber == "none":
 
 # Not really using keyfile password :(
 
-# Generate our key
-private_key = ed25519.Ed25519PrivateKey.generate()
-public_key = private_key.public_key()
-public_bytes = public_key.public_bytes(
-	encoding=serialization.Encoding.Raw,
-	format=serialization.PublicFormat.Raw)
+if createkeyname:
+	# Generate our key
+	private_key = ed25519.Ed25519PrivateKey.generate()
+	public_key = private_key.public_key()
+	public_bytes = public_key.public_bytes(
+		encoding=serialization.Encoding.Raw,
+		format=serialization.PublicFormat.Raw)
+	
+	# Write our key to disk for safe keeping
+	
+	with open(keyname + "prv.pem", "wb") as f:
+		f.write(private_key.private_bytes(
+			encoding=serialization.Encoding.PEM,
+			format=serialization.PrivateFormat.PKCS8,
+			encryption_algorithm=serialization.NoEncryption(),
+			))
+else:
+	with open(keyname + "prv.pem", "rb") as f:
+		keyname_pkkey = f.read()
+	f.close()
+	private_key = load_pem_private_key(keyname_pkkey, None)
+	public_key = private_key.public_key()
+	public_bytes = public_key.public_bytes(
+		encoding=serialization.Encoding.Raw,
+		format=serialization.PublicFormat.Raw)
 
-# Write our key to disk for safe keeping
 
-with open(keyname + "prv.pem", "wb") as f:
-    f.write(private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption(),
-        ))
 
 if raa == 0:
 	print("No RAA provided.  A DET will not be generated")
