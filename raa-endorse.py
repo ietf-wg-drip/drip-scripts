@@ -22,16 +22,16 @@
 #
 #raa = 16376
 #hda = 16376
-#DETofHDA=0x20010030000000050eda8a644093aadd
+#DETofRAA=0x20010030000000050eda8a644093aadd
 #vnb="04/01/2024"
 #vna="04/01/2025"
-#hdakey="hda"
-#uacsr="ua1"
+#raakey="raa"
+#hdacsr="hda1"
 
 # all of these variables can be overridden via the command line
 #
 # e.g.
-#python endorse.py --commandfile=ua1.dat --vnb="06/01/2024" --hdakey=hda
+#python endorse.py --commandfile=hda1.dat --vnb="06/01/2024" --raakey=raa
 
 
 __version__ = '2024-09-10'
@@ -66,7 +66,7 @@ def det_orchid(raa, hda, hi):
 	ContextID = unhexlify("00B5A69C795DF5D5F0087F56843F2C40")
 
 
-	#format the HID from raa and HDA
+	#format the HID from RAA and HDA
 #	print("raa:", raa)
 #	print("RAA:", f'{raa:014b}')
 #	print("hda:", hda)
@@ -87,22 +87,22 @@ def det_orchid(raa, hda, hi):
 	h_orchid = hex(int(b_prefix + b_hid + b_ogaid, 2))[2:] + h_hash
 #	orchid = 2
 
-	print("UA DET:", h_orchid)
+	print("HDA DET:", h_orchid)
 	# add in ':' for IPv6
 	hiprr = base64.b64encode(hi).decode('ascii')
 #	print("HIP RR: IN  HIP ( 5 ", h_orchid, "\n        ", hiprr, ")")
 	#, hiprr[52:].zfill(52), ")")
 	str_orchid = ':'.join(h_orchid[i:i+4] for i in range(0, len(h_orchid), 4))
-	print("UA DET:", str_orchid)
+	print("HDA DET:", str_orchid)
 
 	return h_orchid
 
-commandfile = "ua.dat"
-DETofHDA=0x2001003ffe3ff8055077246573373664
+commandfile = "hda.dat"
+DETofRAA=0x2001003ffe3ff8055077246573373664
 vnb = "04/01/2024"
 vna = "04/01/2025"
-uacsr="ua1"
-hdakey="hda"
+hdacsr="hda1"
+raakey="raa"
 
 # should extract raa and hda from DETofHDA
 raa = 16376
@@ -144,52 +144,52 @@ while a:
 	exec("%s" % line.strip())
 file1.close()
 
-uapem=uacsr
-uacsr=uacsr + "csr.pem"
-hdakey=hdakey + "prv.pem"
-DETofHDA=hex(DETofHDA)[2:]
+hdapem = hdacsr
+hdacsr=hdacsr + "csr.pem"
+raakey=raakey + "prv.pem"
+DETofRAA=hex(DETofRAA)[2:]
 
-with open(hdakey, "rb") as f:
-	hda_pkkey = f.read()
+with open(raakey, "rb") as f:
+	raa_pkkey = f.read()
 f.close()
 
-hda_prkey = load_pem_private_key(hda_pkkey, None)
-hda_prkey_bytes = hda_prkey.private_bytes(
+raa_prkey = load_pem_private_key(raa_pkkey, None)
+raa_prkey_bytes = raa_prkey.private_bytes(
 	encoding=serialization.Encoding.Raw,
 	format=serialization.PrivateFormat.Raw,
 	encryption_algorithm=serialization.NoEncryption()
 	)
-#print("pr", type(hda_prkey_bytes), hda_prkey_bytes)
-hda_pukey = hda_prkey.public_key()
-hda_pukey_bytes = hda_pukey.public_bytes(
+#print("pr", type(raa_prkey_bytes), raa_prkey_bytes)
+raa_pukey = raa_prkey.public_key()
+raa_pukey_bytes = raa_pukey.public_bytes(
 	encoding=serialization.Encoding.Raw,
 	format=serialization.PublicFormat.Raw
 	)
-#print("pu", type(hda_pukey_bytes), hda_pukey_bytes)
+#print("pu", type(raa_pukey_bytes), raa_pukey_bytes)
 
-with open(uacsr, "rb") as f:
-	ua_pem_req_data = f.read()
+with open(hdacsr, "rb") as f:
+	hda_pem_req_data = f.read()
 f.close()
 
-ua_csr = x509.load_pem_x509_csr(ua_pem_req_data)
-ua_csr_pbkey = ua_csr.public_key()
-#print("x",ua_csr_pbkey)
+hda_csr = x509.load_pem_x509_csr(hda_pem_req_data)
+hda_csr_pbkey = hda_csr.public_key()
+#print("x",hda_csr_pbkey)
 
-ua_public_bytes = ua_csr.public_key().public_bytes(
+hda_public_bytes = hda_csr.public_key().public_bytes(
      encoding=serialization.Encoding.Raw,
      format=serialization.PublicFormat.Raw,)
 
 
-#print("ua_hi",type(ua_public_bytes),ua_public_bytes)
+#print("hda_hi",type(hda_public_bytes),hda_public_bytes)
 
-det = det_orchid(raa, hda, ua_public_bytes)
+det = det_orchid(raa, hda, hda_public_bytes)
 #print("orchid", type(det),det)
 detb = bytes(det, 'utf-8')
 #print(type(detb),detb)
 deti = int(bytes(det, 'utf-8'),16)
 #print(type(deti),deti)
 
-ua_hihex = ua_public_bytes.hex()
+hda_hihex = hda_public_bytes.hex()
 
 # Create Endorsement
 
@@ -205,22 +205,22 @@ tuple = elementa.timetuple()
 vnatime = time.mktime(tuple)
 #print(vna, hex(int(vnatime))[2:].zfill(8))
 
-pleasesign = hex(int(vnbtime))[2:].zfill(8) + hex(int(vnatime))[2:].zfill(8) + det.zfill(32) + ua_hihex.zfill(64) + DETofHDA
+pleasesign = hex(int(vnbtime))[2:].zfill(8) + hex(int(vnatime))[2:].zfill(8) + det.zfill(32) + hda_hihex.zfill(64) + DETofRAA
 #print(pleasesign)
 pleasesignb = bytes(pleasesign, 'utf-8')
 #print(type(pleasesignb),pleasesignb)
-signature = hda_prkey.sign(pleasesignb)
+signature = raa_prkey.sign(pleasesignb)
 #print(type(signature.hex()),signature.hex())
 
 endorsement = pleasesign + signature.hex()
-print("UA Endorsement by HDA(", len(endorsement)/2, " bytes):" , endorsement)
+print("HDA Endorsement by RAA(", len(endorsement)/2, " bytes):" , endorsement)
 
 #need to convert endorsement to bytes?
 #with open("UA1endor.ment", "wb") as f:
 #	f.write(endorsement)
 
-ua_subject_sn = ua_csr.subject.get_attributes_for_oid(NameOID.SERIAL_NUMBER)[0].value
-print("UA SN:",ua_subject_sn)
+hda_subject_sn = hda_csr.subject.get_attributes_for_oid(NameOID.SERIAL_NUMBER)[0].value
+print("HDA SN:",hda_subject_sn)
 
 # Create X.509 cert
 
@@ -228,19 +228,19 @@ builder = x509.CertificateBuilder()
 builder = builder.subject_name(x509.Name([]))
 builder = builder.not_valid_before(elementb + datetime.timedelta(minutes=1))
 builder = builder.not_valid_after(elementa + datetime.timedelta(hours=23, minutes=59))
-# If HDA does not use CRL, can use short cert.serial_number
-builder = builder.serial_number(random.randint(1000,9999))
-# If HDA does use CRL, should use large cert.serial_number
-#builder = builder.serial_number(x509.random_serial_number())
-builder = builder.public_key(ua_csr_pbkey)
+# If RAA does not use CRL, can use short cert.serial_number
+#builder = builder.serial_number(random.randint(1000,9999))
+# If RAA does use CRL, should use large cert.serial_number
+builder = builder.serial_number(x509.random_serial_number())
+builder = builder.public_key(hda_csr_pbkey)
 builder = builder.add_extension(
 	x509.SubjectAlternativeName([x509.IPAddress(ipaddress.IPv6Address(deti))
 #	,x509.UniformResourceIdentifier('https://cryptography.io')
 	]),critical=True,)
 builder = builder.issuer_name(
-    x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, (DETofHDA + "I"))]))
-certificate = builder.sign(hda_prkey, None)
+    x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, (DETofRAA))]))
+certificate = builder.sign(raa_prkey, None)
 
-with open(uapem + ".pem", "wb") as f:
+with open(hdapem + ".pem", "wb") as f:
 	f.write(certificate.public_bytes(serialization.Encoding.PEM))
 

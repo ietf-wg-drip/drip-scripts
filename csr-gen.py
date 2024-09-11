@@ -2,7 +2,7 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2024-09-09
+# 2024-09-10
 
 # developed with Fedora 38 using
 # dnf install python3-pycryptodomex
@@ -10,7 +10,7 @@
 # I don't know if the following is still needed...
 # dnf install python3-IPy
 
-__version__ = '2024.09.09'
+__version__ = '2024.09.10'
 import sys, getopt
 import ipaddress
 from binascii import *
