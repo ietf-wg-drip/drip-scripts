@@ -2,7 +2,7 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2024-09-10
+# 2024-09-11
 
 # developed with Fedora 38 using
 # dnf install python3-pycryptodomex
@@ -34,7 +34,7 @@
 #python endorse.py --commandfile=ua1.dat --vnb="06/01/2024" --hdakey=hda
 
 
-__version__ = '2024-09-10'
+__version__ = '2024-09-11'
 
 import sys, getopt
 import ipaddress
@@ -238,7 +238,7 @@ builder = builder.add_extension(
 #	,x509.UniformResourceIdentifier('https://cryptography.io')
 	]),critical=True,)
 builder = builder.issuer_name(
-    x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, (DETofHDA + "I"))]))
+    x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, (DETofHDA))]))
 certificate = builder.sign(hda_prkey, None)
 
 with open(uapem + ".pem", "wb") as f:

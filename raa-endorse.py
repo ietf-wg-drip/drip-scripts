@@ -2,7 +2,7 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2024-09-10
+# 2024-09-11
 
 # developed with Fedora 38 using
 # dnf install python3-pycryptodomex
@@ -22,6 +22,7 @@
 #
 #raa = 16376
 #hda = 16376
+#caname = "HDA-I-16376-16376"
 #DETofRAA=0x20010030000000050eda8a644093aadd
 #vnb="04/01/2024"
 #vna="04/01/2025"
@@ -34,7 +35,7 @@
 #python endorse.py --commandfile=hda1.dat --vnb="06/01/2024" --raakey=raa
 
 
-__version__ = '2024-09-10'
+__version__ = '2024-09-11'
 
 import sys, getopt
 import ipaddress
@@ -225,7 +226,7 @@ print("HDA SN:",hda_subject_sn)
 # Create X.509 cert
 
 builder = x509.CertificateBuilder()
-builder = builder.subject_name(x509.Name([]))
+builder = builder.subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "DRIP-" + caname)]))
 builder = builder.not_valid_before(elementb + datetime.timedelta(minutes=1))
 builder = builder.not_valid_after(elementa + datetime.timedelta(hours=23, minutes=59))
 # If RAA does not use CRL, can use short cert.serial_number
@@ -237,6 +238,13 @@ builder = builder.add_extension(
 	x509.SubjectAlternativeName([x509.IPAddress(ipaddress.IPv6Address(deti))
 #	,x509.UniformResourceIdentifier('https://cryptography.io')
 	]),critical=True,)
+builder = builder.add_extension(
+	x509.BasicConstraints(ca=True, path_length=None), critical=True,
+	)
+# need to fix this...
+#builder = builder.add_extension(
+#	x509.KeyUsage(key_cert_sign=True), critical=True,
+#	)
 builder = builder.issuer_name(
     x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, (DETofRAA))]))
 certificate = builder.sign(raa_prkey, None)
