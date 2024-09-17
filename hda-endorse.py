@@ -2,7 +2,7 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2024-09-11
+# 2024-09-17
 
 # developed with Fedora 38 using
 # dnf install python3-pycryptodomex
@@ -34,7 +34,7 @@
 #python endorse.py --commandfile=ua1.dat --vnb="06/01/2024" --hdakey=hda
 
 
-__version__ = '2024-09-11'
+__version__ = '2024-09-17'
 
 import sys, getopt
 import ipaddress
@@ -179,17 +179,18 @@ ua_public_bytes = ua_csr.public_key().public_bytes(
      encoding=serialization.Encoding.Raw,
      format=serialization.PublicFormat.Raw,)
 
-
 #print("ua_hi",type(ua_public_bytes),ua_public_bytes)
+ua_hihex = ua_public_bytes.hex()
+#print("ua_hihex",type(ua_hihex),ua_hihex)
+ua_hibytes = bytes(ua_public_bytes.hex(), 'utf-8')
+#print("ua_hibytes",type(ua_hibytes),ua_hibytes)
 
-det = det_orchid(raa, hda, ua_public_bytes)
+det = det_orchid(raa, hda, ua_hibytes)
 #print("orchid", type(det),det)
 detb = bytes(det, 'utf-8')
 #print(type(detb),detb)
 deti = int(bytes(det, 'utf-8'),16)
 #print(type(deti),deti)
-
-ua_hihex = ua_public_bytes.hex()
 
 # Create Endorsement
 

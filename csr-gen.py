@@ -2,7 +2,7 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2024-09-10
+# 2024-09-17
 
 # developed with Fedora 38 using
 # dnf install python3-pycryptodomex
@@ -10,7 +10,7 @@
 # I don't know if the following is still needed...
 # dnf install python3-IPy
 
-__version__ = '2024.09.10'
+__version__ = '2024.09.17'
 import sys, getopt
 import ipaddress
 from binascii import *
@@ -35,9 +35,9 @@ def det_orchid(raa, hda, hi):
 
 
 	#format the HID from raa and HDA
-#	print("raa:", raa)
+	print("raa:", raa)
 #	print("RAA:", f'{raa:014b}')
-#	print("hda:", hda)
+	print("hda:", hda)
 #	print("HDA:", f'{hda:014b}')
 	b_hid = f'{raa:014b}' + f'{hda:014b}'
 #	print("HID:", b_hid)
@@ -47,7 +47,8 @@ def det_orchid(raa, hda, hi):
 #	print(h_orchid_left.hex())
 	shake =  cSHAKE128.new(custom = ContextID)
 #	print(type(h_orchid_left))
-#	print(type(hi), hi)
+#	print("HI:", type(hi), hi)
+	print("HI:", hi)
 	shake.update((h_orchid_left + hi))
 	h_hash = shake.read(8).hex()
 
@@ -102,10 +103,10 @@ for opt, arg in opts:
 	elif opt == '--keynameexists':
 		if arg == 'n' or arg == 'N':
 			createkeyname = True
-			print("No")
+#			print("No")
 		else:
 			createkeyname = False
-			print("yes")
+#			print("yes")
 
 if serialnumber == "none":
 	print("Error - No Serial Number")
@@ -129,6 +130,7 @@ if createkeyname:
 			format=serialization.PrivateFormat.PKCS8,
 			encryption_algorithm=serialization.NoEncryption(),
 			))
+		f.close()
 else:
 	with open(keyname + "prv.pem", "rb") as f:
 		keyname_pkkey = f.read()
@@ -174,3 +176,4 @@ else:
 
 with open(keyname + "csr.pem", "wb") as f:
     f.write(csr.public_bytes(serialization.Encoding.PEM))
+f.close()

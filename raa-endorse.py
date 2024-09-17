@@ -2,7 +2,7 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2024-09-11
+# 2024-09-17
 
 # developed with Fedora 38 using
 # dnf install python3-pycryptodomex
@@ -35,7 +35,7 @@
 #python endorse.py --commandfile=hda1.dat --vnb="06/01/2024" --raakey=raa
 
 
-__version__ = '2024-09-11'
+__version__ = '2024-09-17'
 
 import sys, getopt
 import ipaddress
@@ -68,9 +68,9 @@ def det_orchid(raa, hda, hi):
 
 
 	#format the HID from RAA and HDA
-#	print("raa:", raa)
+	print("raa:", raa)
 #	print("RAA:", f'{raa:014b}')
-#	print("hda:", hda)
+	print("hda:", hda)
 #	print("HDA:", f'{hda:014b}')
 	b_hid = f'{raa:014b}' + f'{hda:014b}'
 #	print("HID:", b_hid)
@@ -80,7 +80,8 @@ def det_orchid(raa, hda, hi):
 #	print(h_orchid_left.hex())
 	shake =  cSHAKE128.new(custom = ContextID)
 #	print(type(h_orchid_left),h_orchid_left)
-#	print("hi",type(hi), hi)
+#	print("HI:", "hi",type(hi), hi)
+	print("HI:", hi)
 	shake.update((h_orchid_left + hi))
 	h_hash = shake.read(8).hex()
 
@@ -105,7 +106,7 @@ vna = "04/01/2025"
 hdacsr="hda1"
 raakey="raa"
 
-# should extract raa and hda from DETofHDA
+# should extract raa and hda from DETofRAA
 raa = 16376
 hda = 16376
 
@@ -182,15 +183,18 @@ hda_public_bytes = hda_csr.public_key().public_bytes(
 
 
 #print("hda_hi",type(hda_public_bytes),hda_public_bytes)
+hda_hihex = hda_public_bytes.hex()
+#print("hda_hihex",type(hda_hihex),hda_hihex)
+hda_hibytes = bytes(hda_public_bytes.hex(), 'utf-8')
+#print("hda_hibytes",type(hda_hibytes),hda_hibytes)
 
-det = det_orchid(raa, hda, hda_public_bytes)
+
+det = det_orchid(raa, hda, hda_hibytes)
 #print("orchid", type(det),det)
 detb = bytes(det, 'utf-8')
 #print(type(detb),detb)
 deti = int(bytes(det, 'utf-8'),16)
 #print(type(deti),deti)
-
-hda_hihex = hda_public_bytes.hex()
 
 # Create Endorsement
 
@@ -242,6 +246,16 @@ builder = builder.add_extension(
 	x509.BasicConstraints(ca=True, path_length=None), critical=True,
 	)
 # need to fix this...
+builder = builder.add_extension(x509.KeyUsage(
+	digital_signature=False,
+	content_commitment=False,
+	key_encipherment=False, 
+	data_encipherment=False, 
+	key_agreement=False,
+	key_cert_sign=True,
+	crl_sign=False, 
+	encipher_only=False, 
+	decipher_only=False),  critical=True)
 #builder = builder.add_extension(
 #	x509.KeyUsage(key_cert_sign=True), critical=True,
 #	)
