@@ -76,7 +76,7 @@ def det_orchid(raa, hda, hi):
 #	print("HID:", b_hid)
 
 	# perform hash with cSHAKE using input data
-	h_orchid_left = unhexlify(b_prefix + b_hid + b_ogaid)
+	h_orchid_left = hex(int(b_prefix + b_hid + b_ogaid, 2))[2:]
 #	print(h_orchid_left.hex())
 	shake =  cSHAKE128.new(custom = ContextID)
 #	print(type(h_orchid_left),h_orchid_left)
@@ -212,7 +212,7 @@ vnatime = time.mktime(tuple)
 
 pleasesign = hex(int(vnbtime))[2:].zfill(8) + hex(int(vnatime))[2:].zfill(8) + det.zfill(32) + hda_hihex.zfill(64) + DETofRAA
 #print(pleasesign)
-pleasesignb = bytes(pleasesign, 'utf-8')
+pleasesignb = unhexlify(pleasesign)
 #print(type(pleasesignb),pleasesignb)
 signature = raa_prkey.sign(pleasesignb)
 #print(type(signature.hex()),signature.hex())
