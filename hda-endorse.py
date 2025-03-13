@@ -2,7 +2,7 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2024-09-17
+# 2025-03-13
 
 # developed with Fedora 38 using
 # dnf install python3-pycryptodomex
@@ -22,6 +22,7 @@
 #
 #raa = 16376
 #hda = 16376
+#serialnumberbits = 31
 #DETofHDA=0x20010030000000050eda8a644093aadd
 #vnb="04/01/2024"
 #vna="04/01/2025"
@@ -34,8 +35,7 @@
 #python endorse.py --commandfile=ua1.dat --vnb="06/01/2024" --hdakey=hda
 
 
-__version__ = '2024-09-17'
-
+__version__ = '2025-03-13'
 import sys, getopt
 import ipaddress
 import time
@@ -99,6 +99,7 @@ def det_orchid(raa, hda, hi):
 
 commandfile = "ua.dat"
 DETofHDA=0x2001003ffe3ff8055077246573373664
+serialnumberbits = 31
 vnb = "04/01/2024"
 vna = "04/01/2025"
 uacsr="ua1"
@@ -179,18 +180,18 @@ ua_public_bytes = ua_csr.public_key().public_bytes(
      encoding=serialization.Encoding.Raw,
      format=serialization.PublicFormat.Raw,)
 
-#print("ua_hi",type(ua_public_bytes),ua_public_bytes)
-ua_hihex = ua_public_bytes.hex()
-#print("ua_hihex",type(ua_hihex),ua_hihex)
-ua_hibytes = bytes(ua_public_bytes.hex(), 'utf-8')
-#print("ua_hibytes",type(ua_hibytes),ua_hibytes)
 
-det = det_orchid(raa, hda, ua_hibytes)
+#print("ua_hi",type(ua_public_bytes),ua_public_bytes)
+
+det = det_orchid(raa, hda, ua_public_bytes)
 #print("orchid", type(det),det)
 detb = bytes(det, 'utf-8')
 #print(type(detb),detb)
 deti = int(bytes(det, 'utf-8'),16)
 #print(type(deti),deti)
+
+ua_hihex = ua_public_bytes.hex()
+print("HI:", ua_hihex)
 
 # Create Endorsement
 
@@ -230,7 +231,7 @@ builder = builder.subject_name(x509.Name([]))
 builder = builder.not_valid_before(elementb + datetime.timedelta(minutes=1))
 builder = builder.not_valid_after(elementa + datetime.timedelta(hours=23, minutes=59))
 # If HDA does not use CRL, can use short cert.serial_number
-builder = builder.serial_number(random.randint(1000,9999))
+builder = builder.serial_number(random.getrandbits(serialnumberbits))
 # If HDA does use CRL, should use large cert.serial_number
 #builder = builder.serial_number(x509.random_serial_number())
 builder = builder.public_key(ua_csr_pbkey)

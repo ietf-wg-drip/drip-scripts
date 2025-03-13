@@ -2,7 +2,7 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2024-09-17
+# 2025-03-13
 
 # developed with Fedora 38 using
 # dnf install python3-pycryptodomex
@@ -22,6 +22,7 @@
 #
 #raa = 16376
 #hda = 16376
+#serialnumberbits = 7
 #caname = "HDA-I-16376-16376"
 #DETofRAA=0x20010030000000050eda8a644093aadd
 #vnb="04/01/2024"
@@ -35,7 +36,7 @@
 #python endorse.py --commandfile=hda1.dat --vnb="06/01/2024" --raakey=raa
 
 
-__version__ = '2024-09-17'
+__version__ = '2025-03-13'
 
 import sys, getopt
 import ipaddress
@@ -68,9 +69,9 @@ def det_orchid(raa, hda, hi):
 
 
 	#format the HID from RAA and HDA
-	print("raa:", raa)
+#	print("raa:", raa)
 #	print("RAA:", f'{raa:014b}')
-	print("hda:", hda)
+#	print("hda:", hda)
 #	print("HDA:", f'{hda:014b}')
 	b_hid = f'{raa:014b}' + f'{hda:014b}'
 #	print("HID:", b_hid)
@@ -80,8 +81,7 @@ def det_orchid(raa, hda, hi):
 #	print(h_orchid_left.hex())
 	shake =  cSHAKE128.new(custom = ContextID)
 #	print(type(h_orchid_left),h_orchid_left)
-#	print("HI:", "hi",type(hi), hi)
-	print("HI:", hi)
+#	print("hi",type(hi), hi)
 	shake.update((h_orchid_left + hi))
 	h_hash = shake.read(8).hex()
 
@@ -99,19 +99,22 @@ def det_orchid(raa, hda, hi):
 
 	return h_orchid
 
+# If RAA does not use CRL, can use short cert.serial_number
+# If RAA does use CRL, should use large cert.serial_number
 commandfile = "hda.dat"
 DETofRAA=0x2001003ffe3ff8055077246573373664
+serialnumberbits = 7
 vnb = "04/01/2024"
 vna = "04/01/2025"
 hdacsr="hda1"
 raakey="raa"
 
-# should extract raa and hda from DETofRAA
+# should extract raa and hda from DETofHDA
 raa = 16376
 hda = 16376
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:],"hn:p:c:",["commandfile=","hdakey=","passwd=","vnb=","vna=", "raa=", "hda="])
+	opts, args = getopt.getopt(sys.argv[1:],"hn:p:c:",["commandfile=","hdakey=","passwd=","vnb=","vna=", "raa=", "hda=", "certsign="])
 except getopt.GetoptError:
 	print('Error')
 	sys.ext(2)
@@ -119,7 +122,7 @@ except getopt.GetoptError:
 #	parse the args
 for opt, arg in opts:
 	if opt == '-h':
-		print('endorse.py [-c,--commandfile] <UA commandfile> <UA keyname> [-k --hdakey, will be appended with prv.pem  -p,--passwd <password> --vnb <Not Before date:04/01/2023> --vna <vna <Not After date:04/01/2023> --raa nn --hda nn')
+		print('endorse.py [-c,--commandfile] <UA commandfile> <UA keyname> [-k --hdakey, will be appended with prv.pem  -p,--passwd <password> --vnb <Not Before date:04/01/2023> --vna <vna <Not After date:04/01/2023> --raa nn --hda nn --certsign <y/n>')
 		sys.exit()
 	elif opt in ("-c", "--commandfile"):
 		commandfile = arg + ".dat"
@@ -135,6 +138,11 @@ for opt, arg in opts:
 		raa = arg
 	elif opt == '--hda':
 		hda = arg
+	elif opt == '--certsign':
+		if arg == 'y' or arg == 'Y':
+			certsign = True
+		else:
+			certsign = False
 
 file1 = open(commandfile, 'r')
 a = True
@@ -183,18 +191,16 @@ hda_public_bytes = hda_csr.public_key().public_bytes(
 
 
 #print("hda_hi",type(hda_public_bytes),hda_public_bytes)
-hda_hihex = hda_public_bytes.hex()
-#print("hda_hihex",type(hda_hihex),hda_hihex)
-hda_hibytes = bytes(hda_public_bytes.hex(), 'utf-8')
-#print("hda_hibytes",type(hda_hibytes),hda_hibytes)
 
-
-det = det_orchid(raa, hda, hda_hibytes)
+det = det_orchid(raa, hda, hda_public_bytes)
 #print("orchid", type(det),det)
 detb = bytes(det, 'utf-8')
 #print(type(detb),detb)
 deti = int(bytes(det, 'utf-8'),16)
 #print(type(deti),deti)
+
+hda_hihex = hda_public_bytes.hex()
+print("HI:", hda_hihex)
 
 # Create Endorsement
 
@@ -233,10 +239,7 @@ builder = x509.CertificateBuilder()
 builder = builder.subject_name(x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "DRIP-" + caname)]))
 builder = builder.not_valid_before(elementb + datetime.timedelta(minutes=1))
 builder = builder.not_valid_after(elementa + datetime.timedelta(hours=23, minutes=59))
-# If RAA does not use CRL, can use short cert.serial_number
-#builder = builder.serial_number(random.randint(1000,9999))
-# If RAA does use CRL, should use large cert.serial_number
-builder = builder.serial_number(x509.random_serial_number())
+builder = builder.serial_number(random.getrandbits(serialnumberbits))
 builder = builder.public_key(hda_csr_pbkey)
 builder = builder.add_extension(
 	x509.SubjectAlternativeName([x509.IPAddress(ipaddress.IPv6Address(deti))
@@ -246,19 +249,14 @@ builder = builder.add_extension(
 	x509.BasicConstraints(ca=True, path_length=None), critical=True,
 	)
 # need to fix this...
-builder = builder.add_extension(x509.KeyUsage(
-	digital_signature=False,
-	content_commitment=False,
-	key_encipherment=False, 
-	data_encipherment=False, 
-	key_agreement=False,
-	key_cert_sign=True,
-	crl_sign=False, 
-	encipher_only=False, 
-	decipher_only=False),  critical=True)
-#builder = builder.add_extension(
-#	x509.KeyUsage(key_cert_sign=True), critical=True,
-#	)
+if certsign:
+	builder = builder.add_extension(
+		x509.KeyUsage(digital_signature=False, key_encipherment=False, content_commitment=False,
+					data_encipherment=False, key_agreement=False, key_cert_sign=True, crl_sign=False,
+					encipher_only=False, decipher_only=False),
+		critical=True,
+)
+
 builder = builder.issuer_name(
     x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, (DETofRAA))]))
 certificate = builder.sign(raa_prkey, None)
