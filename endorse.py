@@ -2,7 +2,7 @@
 
 # HTT Consulting, LLC
 # Robert Moskowitz
-# 2025-03-16
+# 2025-03-18
 
 # developed with Fedora 41 using
 # dnf install python3-pycryptodomex
@@ -42,7 +42,7 @@
 #entitycert=True
 # caname when entitycert=False
 
-__version__ = '2025-03-16'
+__version__ = '2025-03-18'
 
 import sys, getopt
 import ipaddress
@@ -60,7 +60,7 @@ from cryptography.x509 import CertificatePolicies, PolicyInformation
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from Cryptodome.Hash import cSHAKE128
-from Cryptodome.PublicKey import ECC
+# Cryptodome is the only source for cSHAKE
 
 def det_orchid(raa, hda, suiteid, hi):
 	# set some defaults
@@ -230,8 +230,8 @@ endorsement = pleasesign + signature.hex()
 print("Client Endorsement by CA(", len(endorsement)/2, " bytes):" , endorsement)
 
 #need to convert endorsement to bytes?
-#with open("UA1endor.ment", "wb") as f:
-#	f.write(endorsement)
+with open(clientpem + ".eds", "w") as f:
+	f.write(endorsement)
 
 client_subject_sn = client_csr.subject.get_attributes_for_oid(NameOID.SERIAL_NUMBER)[0].value
 print("client SN:",client_subject_sn)
