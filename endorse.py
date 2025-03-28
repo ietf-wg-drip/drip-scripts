@@ -72,26 +72,39 @@ def det_orchid(raa, hda, suiteid, hi):
 
 	b_ogaid = f'{suiteid:08b}'
 #	print(type(b_ogaid), b_ogaid)
-#	b_ogaid = '00000101' # suiteid of 5, RFC 9374 Section 8.2.2
+#	bo_ogaid = '00000101' # suiteid of 5, RFC 9374 Section 8.2.2
 	ContextID = unhexlify("00B5A69C795DF5D5F0087F56843F2C40")
+#	print("ContextID", type(ContextID),ContextID)
 
 
 	#format the HID from RAA and HDA
 #	print("raa:", raa)
-#	print("RAA:", f'{raa:014b}')
 #	print("hda:", hda)
-#	print("HDA:", f'{hda:014b}')
 	b_hid = f'{raa:014b}' + f'{hda:014b}'
 #	print("HID:", b_hid)
 
 	# perform hash with cSHAKE using input data
-	h_orchid_left = unhexlify(b_prefix + b_hid + b_ogaid)
-#	print(h_orchid_left.hex())
+	orchid_left = b_prefix + b_hid + b_ogaid
+#	print("orchid_left", type(orchid_left), orchid_left)
+#	hu_orchid_left = unhexlify(b_prefix + b_hid + b_ogaid)
+	h_orchid_left = hex(int((b_prefix + b_hid + b_ogaid), 2))[2:]
+#	print("h_orchid_left", type(h_orchid_left),h_orchid_left)
+#	h_orchid_left = bytes(h_orchid_left, 'utf-8')
+	h_orchid_left = bytes.fromhex(h_orchid_left)
+#	h_orchid_left = unhexlify(b_prefix + b_hid + b_ogaid)
+#	h_orchid_left = bytes.fromhex(h_orchid_left)
+
+#	print("h_orchid_left.hex()", type(h_orchid_left.hex()), h_orchid_left.hex())
 	shake =  cSHAKE128.new(custom = ContextID)
-#	print(type(h_orchid_left),h_orchid_left)
+#	print("h_orchid_left", type(h_orchid_left),h_orchid_left)
+#	print("hu_orchid_left", type(hu_orchid_left),hu_orchid_left)
 #	print("hi",type(hi), hi)
-	shake.update((h_orchid_left + hi))
+	det_source = h_orchid_left + hi
+#	print("det_source",type(det_source), det_source)
+#	shake.update((hu_orchid_left + hi))
+	shake.update(det_source)
 	h_hash = shake.read(8).hex()
+#	print(type(h_hash),h_hash)
 
 	# format orchid in binary
 	h_orchid = hex(int(b_prefix + b_hid + b_ogaid, 2))[2:] + h_hash
@@ -179,13 +192,14 @@ ca_pukey_bytes = ca_pukey.public_bytes(
 	encoding=serialization.Encoding.Raw,
 	format=serialization.PublicFormat.Raw
 	)
-#print("client_hi",type(client_public_bytes),client_public_bytes)
-ca_hibytes = bytes(ca_pukey_bytes.hex(), 'utf-8')
-#print("client_hibytes",type(client_hibytes),client_hibytes)
+#print("ca_hi",type(ca_pukey_bytes),ca_pukey_bytes)
+#ca_hibytes = bytes(ca_pukey_bytes.hex(), 'utf-8')
+#print("ca_hibytes",type(ca_hibytes),ca_hibytes)
 print("CA")
 #print(raa, cahda, suiteid)
 #print("pu", type(ca_pukey_bytes), ca_pukey_bytes)
-cadet = det_orchid(raa, cahda, suiteid, ca_hibytes)
+cadet = det_orchid(raa, cahda, suiteid, ca_pukey_bytes)
+#cadet = det_orchid(raa, cahda, suiteid, ca_hibytes)
 #print("ca orchid", type(cadet),cadet)
 
 with open(clientcsr, "rb") as f:
@@ -199,10 +213,11 @@ client_public_bytes = client_csr.public_key().public_bytes(
      encoding=serialization.Encoding.Raw,
      format=serialization.PublicFormat.Raw,)
 #print("client_hi",type(client_public_bytes),client_public_bytes)
-client_hibytes = bytes(client_public_bytes.hex(), 'utf-8')
+#client_hibytes = bytes(client_public_bytes.hex(), 'utf-8')
 #print("client_hibytes",type(client_hibytes),client_hibytes)
 print("Client")
-clientdet = det_orchid(raa, clhda, suiteid, client_hibytes)
+clientdet = det_orchid(raa, cahda, suiteid, client_public_bytes)
+#clientdet = det_orchid(raa, clhda, suiteid, client_hibytes)
 #print("client orchid", type(clientdet),clientdet)
 
 cldetb = bytes(clientdet, 'utf-8')
