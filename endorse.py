@@ -46,6 +46,7 @@ __version__ = '2025-03-18'
 
 import sys, getopt
 import ipaddress
+import struct
 import time
 import calendar
 import datetime
@@ -237,15 +238,16 @@ elementb = datetime.datetime.strptime(vnb.strip(),"%m/%d/%Y")
 tuple = elementb.timetuple()
 vnbtime = calendar.timegm(tuple) - DRIP_TIMESTAMP_EPOCH
 #print(type(vnbtime), vnbtime)
-vnbh = hex(int(vnbtime))[2:]
+vnbh = struct.pack("<I", int(vnbtime)).hex()
 #print(vnb, len(vnbh), vnbh)
 
 elementa = datetime.datetime.strptime(vna.strip(),"%m/%d/%Y")
 tuple = elementa.timetuple()
 vnatime = calendar.timegm(tuple) - DRIP_TIMESTAMP_EPOCH
+vnah = struct.pack("<I", int(vnatime)).hex()
 #print(vna, hex(int(vnatime))[2:].zfill(8))
 
-pleasesign = hex(int(vnbtime))[2:].zfill(8) + hex(int(vnatime))[2:].zfill(8) + clientdet.zfill(32) + client_hihex.zfill(64) + cadet
+pleasesign = vnbh + vnah + clientdet.zfill(32) + client_hihex.zfill(64) + cadet
 #print(pleasesign)
 pleasesignb = bytes(pleasesign, 'utf-8')
 #print(type(pleasesignb),pleasesignb)
