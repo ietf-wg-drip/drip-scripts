@@ -45,7 +45,7 @@ def det_orchid(keyname, raa, hda, hi):
 #	print("HID:", b_hid)
 
 	# perform hash with cSHAKE using input data
-	h_orchid_left = unhexlify(b_prefix + b_hid + b_ogaid)
+	h_orchid_left = bytes.fromhex(hex(int(b_prefix + b_hid + b_ogaid, 2))[2:])
 #	print(h_orchid_left.hex())
 	shake =  cSHAKE128.new(custom = ContextID)
 	shake.update((h_orchid_left + hi))
