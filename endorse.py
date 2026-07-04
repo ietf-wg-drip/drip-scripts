@@ -243,7 +243,7 @@ vnatime = time.mktime(tuple)
 
 pleasesign = hex(int(vnbtime))[2:].zfill(8) + hex(int(vnatime))[2:].zfill(8) + clientdet.zfill(32) + client_hihex.zfill(64) + cadet
 #print(pleasesign)
-pleasesignb = bytes(pleasesign, 'utf-8')
+pleasesignb = bytes.fromhex(pleasesign) 
 #print(type(pleasesignb),pleasesignb)
 signature = ca_prkey.sign(pleasesignb)
 #print(type(signature.hex()),signature.hex())
@@ -334,4 +334,3 @@ certificate = builder.sign(ca_prkey, None)
 
 with open(clientpem + "pkix.pem", "wb") as f:
 	f.write(certificate.public_bytes(serialization.Encoding.PEM))
-

@@ -158,8 +158,7 @@ if raa == 0:
 else:
 #	print("RAA: ", raa)
 #	print("HDA: ", hda)
-	hi = public_bytes.hex()
-	det = det_orchid(raa, hda, bytes(hi, 'utf-8'))
+	det = det_orchid(raa, hda, public_bytes)
 	det_int = int(bytes(det, 'utf-8'),16)
 	#print("here", type(det), det)
 	#print("here2", type(det_int), det_int)
